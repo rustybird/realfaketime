@@ -1,0 +1,14 @@
+#!/bin/bash
+set -eu
+
+real=$(date         +%s%N)
+fake=$(date -d "$1" +%s%N)
+offset=$(( fake - real ))
+
+printf -v relative_date '%d.%09d seconds' $((   offset    / 1000000000 )) \
+                                          $(( ${offset#-} % 1000000000 ))
+
+[[ $EUID == 0 ]] && sudo= || sudo=sudo
+$sudo date -s "$relative_date" >/dev/null
+trap '$sudo date -s "$relative_date ago" >/dev/null' EXIT  # "ago" means * -1
+"${@:2}"
